@@ -1,32 +1,46 @@
 # CommerceOS Implementation Log
 
-## [2026-10-06] Phase 4 Bangladesh Fulfillment & Courier Integration Completed
+## [2026-10-06] Phase 5 BusinessOS Operations Hub Completed
 
 ### Repository: [`auth-abrar/nazeefa`](https://github.com/auth-abrar/nazeefa)
 
 ### Features Built:
-1. **Shipments & Events Relational Database Schema**:
-   - `database/migrations/2026_10_06_000006_create_shipments_and_events_tables.php`:
-     - `shipments`: Courier provider tag (`pathao`, `steadfast`), unique consignment and tracking codes, COD amount, courier fees, recipient address, and dispatch/delivery timestamps.
-     - `shipment_events`: Audit timeline tracking movement of each package with timestamps and location hubs.
-2. **Fulfillment Models & Domain Providers (`app/Domain/Fulfillment/`)**:
-   - `Shipment.php` & `ShipmentEvent.php`: Domain models with relationships to `Order`.
-   - `FulfillmentManager.php`: Factory manager resolving courier providers (`pathao`, `steadfast`).
-   - `PathaoCourierProvider.php`: Concrete adapter for Pathao Hermes/Aladdin Courier API.
-   - `SteadfastCourierProvider.php`: Concrete adapter for Steadfast Courier nationwide delivery.
-   - `DispatchOrderAction.php`: Domain action orchestrating shipment creation, consignment logging, and order transition to `shipped`.
-3. **Courier Webhook Controller & Normalization Engine**:
-   - `CourierWebhookController.php`: Receives real-time delivery notifications from couriers, translates external statuses to internal states (`picked_up`, `in_transit`, `out_for_delivery`, `delivered`), and marks COD orders `paid` upon successful doorstep delivery.
-   - `routes/webhooks.php`: Configured webhook endpoints.
-   - `docs/integrations/couriers.md`: Comprehensive status normalization reference.
+1. **Multi-Warehouse & Stock Ledger Relational Schema**:
+   - `database/migrations/2026_10_06_000007_create_warehouses_and_inventory_tables.php`:
+     - `warehouses`: Central and regional distribution hubs.
+     - `inventory_items`: Tracking `on_hand`, `reserved`, and `safety_stock` per warehouse/variant.
+     - `stock_movements`: Immutable double-entry ledger tracking all adjustments with user attribution and reason codes.
+2. **Inventory Domain Models & Actions (`app/Domain/Inventory/`)**:
+   - `Warehouse.php`, `InventoryItem.php`, `StockMovement.php`: Models with computed `available` attributes.
+   - `AdjustInventoryAction.php`: Atomic transaction for manual inventory adjustment and movement audit logging.
+3. **Admin Operations Controllers & Routing (`app/Http/Controllers/Admin/`, `routes/admin.php`)**:
+   - `DashboardController.php`: Live operational metric engine computing Today's Sales (BDT), Total Orders, AOV, Dispatches needed, and Low Stock alerts.
+   - `OrderAdminController.php`: Order search, filter, and one-click Pathao/Steadfast dispatch.
+   - `InventoryAdminController.php`: SKU stock matrix and stock adjustments.
+   - `routes/admin.php`: Protected operational routes.
+4. **React 19 BusinessOS Admin UI (`resources/js/`)**:
+   - `AdminLayout.tsx`: Professional operational sidebar with logo, navigation links, and store switchers.
+   - `AdminKpiCard.tsx`: Metric card primitive with status badges.
+   - `Dashboard.tsx`: Executive dashboard with KPI grid, action alert items, and recent orders table.
+   - `OrdersIndex.tsx`: Operations desk table with instant courier dispatch actions.
+   - `InventoryIndex.tsx`: Multi-warehouse stock control table with real-time available stock.
+
+---
+
+## [2026-10-06] Phase 4 Bangladesh Fulfillment & Courier Integration Completed
+
+### Features Built:
+1. Shipments & Events Schemas (`shipments`, `shipment_events`).
+2. Fulfillment Models & Providers (`PathaoCourierProvider`, `SteadfastCourierProvider`, `DispatchOrderAction`).
+3. Courier Webhooks with status normalization (`CourierWebhookController.php`).
 
 ---
 
 ## [2026-10-06] Phase 3 Online Payment Engine Completed
 
 ### Features Built:
-1. Payments & Payment Attempts Schemas (`payments`, `payment_attempts`).
-2. Payment Domain Models & Providers (`PaymentManager`, `CodPaymentProvider`, `SslcommerzPaymentProvider`, `BkashPaymentProvider`).
+1. Payments & Attempts Schemas (`payments`, `payment_attempts`).
+2. Payment Models & Providers (`PaymentManager`, `CodPaymentProvider`, `SslcommerzPaymentProvider`, `BkashPaymentProvider`).
 3. PaymentController & Webhooks (`PaymentController.php`, IPN endpoints).
 4. Checkout UI integration for COD, SSLCOMMERZ, and bKash.
 
