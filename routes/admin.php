@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InventoryAdminController;
 use App\Http\Controllers\Admin\OrderAdminController;
+use App\Http\Controllers\Admin\ProcurementAdminController;
 use App\Http\Controllers\Admin\ProductionAdminController;
 use App\Http\Controllers\Admin\SupplierAdminController;
 use Illuminate\Support\Facades\Route;
@@ -33,4 +34,9 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
     Route::get('/suppliers/search', [SupplierAdminController::class, 'search'])->name('admin.suppliers.search');
     Route::post('/suppliers/import', [SupplierAdminController::class, 'import'])->name('admin.suppliers.import');
     Route::post('/suppliers/sync-stock', [SupplierAdminController::class, 'syncStock'])->name('admin.suppliers.sync-stock');
+
+    // B2B Procurement & Purchase Orders
+    Route::get('/procurement', [ProcurementAdminController::class, 'index'])->name('admin.procurement.index');
+    Route::post('/procurement/purchase-orders', [ProcurementAdminController::class, 'store'])->name('admin.procurement.store');
+    Route::post('/procurement/purchase-orders/{id}/status', [ProcurementAdminController::class, 'updateStatus'])->name('admin.procurement.update-status');
 });
