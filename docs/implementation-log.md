@@ -1,27 +1,41 @@
 # CommerceOS Implementation Log
 
-## [2026-10-06] Phase 2 Commerce Core & Bangladesh Checkout Completed
+## [2026-10-06] Phase 3 Online Payment Engine Completed
 
 ### Repository: [`auth-abrar/nazeefa`](https://github.com/auth-abrar/nazeefa)
 
 ### Features Built:
-1. **Orders & Checkout Relational Database Schema**:
-   - `database/migrations/2026_10_06_000004_create_orders_and_checkout_tables.php`:
-     - `orders`: Unique human-readable `order_number` (`NZ-YYYYMM-XXXXX`), minor-unit monetary tracking (`items_subtotal`, `shipping_amount`, `grand_total`), status tracking, and payment method indicators.
-     - `order_items`: Line-item audit snapshot capturing unit prices, sizes, colors, and variant SKUs.
-     - `order_addresses`: Dedicated Bangladesh recipient schema capturing 64 districts, thanas/areas, and `is_inside_dhaka` boolean.
-     - `coupons`: Percentage and fixed-discount rule tables.
-2. **Order Domain Models & Atomic Action**:
-   - `Order.php`, `OrderItem.php`, `OrderAddress.php`: Eloquent domain models with relationships.
-   - `CreateOrderAction.php`: ACID database transaction that locks variants (`lockForUpdate`), validates inventory availability, reserves stock, applies Dhaka vs Outside-Dhaka delivery fees (৳ 70 vs ৳ 130), awards free delivery on ৳ 2,500+ carts, and issues unique order numbers.
-3. **Checkout & Order Tracking Controllers**:
-   - `CheckoutController.php`: Form presentation, strict Bangladesh mobile regex validation (`01[3-9]XXXXXXXX`), and confirmation page dispatch.
-   - `OrderTrackingController.php`: Live order resolution by order number and mobile phone suffix.
-4. **React 19 & Inertia UI Components**:
-   - `BangladeshLocationSelector.tsx`: Dropdown of all 64 districts in Bangladesh with clear rate annotations.
-   - `Checkout.tsx`: High-conversion direct checkout page with contact details, address selector, Cash on Delivery radio selection, and reactive summary sidebar.
-   - `Confirmation.tsx`: Celebratory order success card with unique tracking ID, delivery recap, and one-tap WhatsApp support trigger.
-   - `TrackOrder.tsx`: Public milestone tracking page visually presenting status progression (Confirmed → In Production → Packed → Dispatched → Delivered).
+1. **Payments & Payment Attempts Relational Database Schema**:
+   - `database/migrations/2026_10_06_000005_create_payments_and_attempts_tables.php`:
+     - `payments`: Persistent audit record of completed/failed transactions with `transaction_id`, amount in poisha, gateway fee, `bank_tran_id`, `card_type`, and timestamp.
+     - `payment_attempts`: Session audit trail recording gateway redirect URLs, raw request payloads, response snapshots, and IP addresses.
+2. **Payment Models & Domain Providers (`app/Domain/Payments/`)**:
+   - `Payment.php` & `PaymentAttempt.php`: Eloquent models with relation to `Order`.
+   - `PaymentManager.php`: Factory manager dynamically resolving payment providers (`cod`, `sslcommerz`, `bkash`).
+   - `CodPaymentProvider.php`: Concrete adapter for standard Cash on Delivery orders.
+   - `SslcommerzPaymentProvider.php`: Concrete adapter implementing SSLCOMMERZ v4 session creation (`/gwprocess/v4/api.php`) and server-to-server transaction validation (`/validator/api/merchantTransIDvalidationAPI.php`).
+   - `BkashPaymentProvider.php`: Concrete adapter implementing tokenized bKash wallet integration.
+3. **HTTP Payment Controllers & Webhook Handlers**:
+   - `PaymentController.php`:
+     - `initiate()`: Starts online gateway session and redirects user to secure checkout page.
+     - `callback()`: Intercepts gateway postback, verifies amount and authenticity against external gateway API on the server, creates `Payment` record, and marks order `paid`.
+     - `cancel()`: Safely handles aborted gateway sessions.
+   - `routes/webhooks.php`: Configured webhook endpoint for instant payment notifications (IPN).
+4. **Enhanced Checkout UI**:
+   - `Checkout.tsx`: Added interactive radio choices for:
+     - Cash on Delivery (COD)
+     - SSLCOMMERZ (Visa, Mastercard, AMEX, Internet Banking)
+     - bKash Direct (Mobile Wallet checkout)
+
+---
+
+## [2026-10-06] Phase 2 Commerce Core & Bangladesh Checkout Completed
+
+### Features Built:
+1. Orders & Checkout Relational Database Schema (`orders`, `order_items`, `order_addresses`, `coupons`).
+2. Order Domain Models & Action (`CreateOrderAction.php` with ACID stock reservation).
+3. Checkout & Order Tracking Controllers (`CheckoutController`, `OrderTrackingController`).
+4. React 19 UI (`BangladeshLocationSelector`, `Checkout`, `Confirmation`, `TrackOrder`).
 
 ---
 
