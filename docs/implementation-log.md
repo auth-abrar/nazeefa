@@ -1,39 +1,42 @@
 # CommerceOS Implementation Log
 
-## [2026-10-06] Phase 3 Online Payment Engine Completed
+## [2026-10-06] Phase 4 Bangladesh Fulfillment & Courier Integration Completed
 
 ### Repository: [`auth-abrar/nazeefa`](https://github.com/auth-abrar/nazeefa)
 
 ### Features Built:
-1. **Payments & Payment Attempts Relational Database Schema**:
-   - `database/migrations/2026_10_06_000005_create_payments_and_attempts_tables.php`:
-     - `payments`: Persistent audit record of completed/failed transactions with `transaction_id`, amount in poisha, gateway fee, `bank_tran_id`, `card_type`, and timestamp.
-     - `payment_attempts`: Session audit trail recording gateway redirect URLs, raw request payloads, response snapshots, and IP addresses.
-2. **Payment Models & Domain Providers (`app/Domain/Payments/`)**:
-   - `Payment.php` & `PaymentAttempt.php`: Eloquent models with relation to `Order`.
-   - `PaymentManager.php`: Factory manager dynamically resolving payment providers (`cod`, `sslcommerz`, `bkash`).
-   - `CodPaymentProvider.php`: Concrete adapter for standard Cash on Delivery orders.
-   - `SslcommerzPaymentProvider.php`: Concrete adapter implementing SSLCOMMERZ v4 session creation (`/gwprocess/v4/api.php`) and server-to-server transaction validation (`/validator/api/merchantTransIDvalidationAPI.php`).
-   - `BkashPaymentProvider.php`: Concrete adapter implementing tokenized bKash wallet integration.
-3. **HTTP Payment Controllers & Webhook Handlers**:
-   - `PaymentController.php`:
-     - `initiate()`: Starts online gateway session and redirects user to secure checkout page.
-     - `callback()`: Intercepts gateway postback, verifies amount and authenticity against external gateway API on the server, creates `Payment` record, and marks order `paid`.
-     - `cancel()`: Safely handles aborted gateway sessions.
-   - `routes/webhooks.php`: Configured webhook endpoint for instant payment notifications (IPN).
-4. **Enhanced Checkout UI**:
-   - `Checkout.tsx`: Added interactive radio choices for:
-     - Cash on Delivery (COD)
-     - SSLCOMMERZ (Visa, Mastercard, AMEX, Internet Banking)
-     - bKash Direct (Mobile Wallet checkout)
+1. **Shipments & Events Relational Database Schema**:
+   - `database/migrations/2026_10_06_000006_create_shipments_and_events_tables.php`:
+     - `shipments`: Courier provider tag (`pathao`, `steadfast`), unique consignment and tracking codes, COD amount, courier fees, recipient address, and dispatch/delivery timestamps.
+     - `shipment_events`: Audit timeline tracking movement of each package with timestamps and location hubs.
+2. **Fulfillment Models & Domain Providers (`app/Domain/Fulfillment/`)**:
+   - `Shipment.php` & `ShipmentEvent.php`: Domain models with relationships to `Order`.
+   - `FulfillmentManager.php`: Factory manager resolving courier providers (`pathao`, `steadfast`).
+   - `PathaoCourierProvider.php`: Concrete adapter for Pathao Hermes/Aladdin Courier API.
+   - `SteadfastCourierProvider.php`: Concrete adapter for Steadfast Courier nationwide delivery.
+   - `DispatchOrderAction.php`: Domain action orchestrating shipment creation, consignment logging, and order transition to `shipped`.
+3. **Courier Webhook Controller & Normalization Engine**:
+   - `CourierWebhookController.php`: Receives real-time delivery notifications from couriers, translates external statuses to internal states (`picked_up`, `in_transit`, `out_for_delivery`, `delivered`), and marks COD orders `paid` upon successful doorstep delivery.
+   - `routes/webhooks.php`: Configured webhook endpoints.
+   - `docs/integrations/couriers.md`: Comprehensive status normalization reference.
+
+---
+
+## [2026-10-06] Phase 3 Online Payment Engine Completed
+
+### Features Built:
+1. Payments & Payment Attempts Schemas (`payments`, `payment_attempts`).
+2. Payment Domain Models & Providers (`PaymentManager`, `CodPaymentProvider`, `SslcommerzPaymentProvider`, `BkashPaymentProvider`).
+3. PaymentController & Webhooks (`PaymentController.php`, IPN endpoints).
+4. Checkout UI integration for COD, SSLCOMMERZ, and bKash.
 
 ---
 
 ## [2026-10-06] Phase 2 Commerce Core & Bangladesh Checkout Completed
 
 ### Features Built:
-1. Orders & Checkout Relational Database Schema (`orders`, `order_items`, `order_addresses`, `coupons`).
-2. Order Domain Models & Action (`CreateOrderAction.php` with ACID stock reservation).
+1. Orders & Checkout Schemas (`orders`, `order_items`, `order_addresses`, `coupons`).
+2. Order Domain Models & Action (`CreateOrderAction.php` with atomic stock reservation).
 3. Checkout & Order Tracking Controllers (`CheckoutController`, `OrderTrackingController`).
 4. React 19 UI (`BangladeshLocationSelector`, `Checkout`, `Confirmation`, `TrackOrder`).
 
