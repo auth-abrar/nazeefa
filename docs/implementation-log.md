@@ -1,39 +1,46 @@
 # CommerceOS Implementation Log
 
-## [2026-10-06] Phase 7 CJ Dropshipping & Supplier Integration Completed
+## [2026-10-06] Phase 8 Alibaba Adapter & Hybrid Sourcing Strategy Completed
 
 ### Repository: [`auth-abrar/nazeefa`](https://github.com/auth-abrar/nazeefa)
 
 ### Features Built:
-1. **Suppliers & Dropshipping Database Schemas**:
-   - `database/migrations/2026_10_06_000009_create_suppliers_and_dropshipping_tables.php`:
-     - `suppliers`: Partner credentials, reliability ratings, lead times, and FX config.
-     - `supplier_products`: Mapped external CJ products with USD wholesale prices and freight estimates.
-     - `supplier_variants`: Mapping external `vid` to local `product_variants`.
-     - `supplier_orders`: Automated supplier sourcing and international tracking orders.
-2. **Domain Models & Pricing Actions (`app/Domain/Suppliers/`)**:
-   - `Supplier.php`, `SupplierProduct.php`, `SupplierVariant.php`, `SupplierOrder.php`: Relational Eloquent models.
-   - `CalculateLandedPriceAction.php`: Mathematical landed-cost engine converting USD wholesale + freight into profitable, clean-rounded BDT retail prices.
-   - `ImportCjProductAction.php`: Atomic transaction creating local `Product` and `ProductVariant` records from CJ dropship specifications.
-   - `CjDropshippingProvider.php`: Implementation of `SupplierProviderInterface` with CJ Open API 2.0 integration and zero-crash deterministic sandbox fallback.
-3. **Admin Controllers & Routing (`app/Http/Controllers/Admin/SupplierAdminController.php`, `routes/admin.php`)**:
-   - Sourcing desk index with FX rate tracker.
-   - Live CJ product keyword search endpoint.
-   - One-click import endpoint into local catalog.
-   - Inventory synchronization action.
-4. **React 19 Sourcing Desk UI (`resources/js/pages/admin/SuppliersIndex.tsx`)**:
-   - Supplier connection health cards (CJ Dropshipping, Alibaba).
-   - Live product sourcing search grid with photo, PID, USD pricing, and estimated BDT retail calculations.
-   - Interactive Landed Cost & Margin Calculator modal with live margin slider (20% to 65%) and cost breakdown.
-   - Mapped products directory and in-flight sourcing orders tracking table.
-5. **Integration Documentation**:
-   - `docs/integrations/suppliers.md`: Detailed CJ Dropshipping Open API 2.0 reference and pricing mathematical formulas.
+1. **Bulk Procurement & Purchase Orders Relational Schema**:
+   - `database/migrations/2026_10_06_000010_create_procurement_and_purchase_orders_tables.php`:
+     - `purchase_orders`: Tracking B2B bulk orders with suppliers, payment milestones (`30_70_milestone`), sea/air freight, 15% customs duties, and port of entry (`Chittagong Sea Port`, `Dhaka Airport Cargo`).
+     - `purchase_order_items`: Line items with MOQ enforcement and received quantity verification.
+     - `orders` table enhanced with `fulfillment_strategy` and `is_split_shipment` tracking.
+2. **Domain Models & Hybrid Routing Engine (`app/Domain/Procurement/`, `app/Domain/Orders/Actions/`)**:
+   - `PurchaseOrder.php`, `PurchaseOrderItem.php`: Domain models with landed cost accessors.
+   - `AlibabaProvider.php`: Implementation of `SupplierProviderInterface` tailored for B2B bulk sourcing, MOQ volume tiers, Trade Assurance, and ocean freight calculations to Chittagong.
+   - `RouteOrderFulfillmentAction.php`: Hybrid Sourcing Decision Engine routing line items between local Dhaka warehouse, on-demand DTF print floor, and CJ dropship packets, with automated split shipment resolution.
+   - `CreatePurchaseOrderAction.php`: Atomic transaction creating PO records and tracking milestones.
+3. **Admin Operations Controllers & Routing (`app/Http/Controllers/Admin/ProcurementAdminController.php`, `routes/admin.php`)**:
+   - B2B procurement dashboard managing PO pipelines.
+   - Purchase order submission and automated status stepping (`submitted` → `deposit_paid` → `in_production` → `in_transit` → `customs_clearance` → `received`).
+   - Automated inventory intake into central warehouse upon status reaching `received`.
+4. **React 19 Procurement Operations UI (`resources/js/pages/admin/ProcurementIndex.tsx`)**:
+   - In-transit inventory valuation cards in both USD and BDT.
+   - Alibaba wholesale catalog browser with MOQ badges, volume tiered pricing, and sample inquiry rates.
+   - Purchase Order Generator modal with freight & customs duty calculations.
+   - Interactive pipeline table with one-click status advancement.
+5. **Architectural Documentation**:
+   - `docs/integrations/alibaba-and-hybrid-sourcing.md`: Comprehensive reference for multi-stream hybrid sourcing, split-shipment rules, and B2B port logistics.
+
+---
+
+## [2026-10-06] Phase 7 CJ Dropshipping & Supplier Integration Completed
+- Migration `2026_10_06_000009_create_suppliers_and_dropshipping_tables.php`.
+- Models: `Supplier.php`, `SupplierProduct.php`, `SupplierVariant.php`, `SupplierOrder.php`.
+- Actions: `CalculateLandedPriceAction.php`, `ImportCjProductAction.php`, `CjDropshippingProvider.php`.
+- React 19 UI: `SuppliersIndex.tsx` sourcing desk and margin calculator modal.
+- Documentation: `docs/integrations/suppliers.md`.
 
 ---
 
 ## [2026-10-06] Phase 6 Print-On-Demand (POD) & Custom Apparel Engine Completed
-- Migration `2026_10_06_000008_create_pod_and_custom_apparel_tables.php` (`artworks`, `design_proofs`, `production_jobs`).
-- Domain models: `Artwork.php`, `DesignProof.php`, `ProductionJob.php`, `CreateProductionJobAction.php`.
+- Migration `2026_10_06_000008_create_pod_and_custom_apparel_tables.php`.
+- Models: `Artwork.php`, `DesignProof.php`, `ProductionJob.php`.
 - Storefront & Admin Controllers: `CustomDesignerController.php`, `ProductionAdminController.php`.
 - React 19 UI: `CustomDesigner.tsx` studio, `ProductionIndex.tsx` production desk.
 
