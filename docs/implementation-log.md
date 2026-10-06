@@ -1,83 +1,79 @@
 # CommerceOS Implementation Log
 
-## [2026-10-06] Phase 6 Print-On-Demand (POD) & Custom Apparel Engine Completed
+## [2026-10-06] Phase 7 CJ Dropshipping & Supplier Integration Completed
 
 ### Repository: [`auth-abrar/nazeefa`](https://github.com/auth-abrar/nazeefa)
 
 ### Features Built:
-1. **POD Relational Database Schema**:
-   - `database/migrations/2026_10_06_000008_create_pod_and_custom_apparel_tables.php`:
-     - `artworks`: Upload storage paths, MIME types, file sizes, print placements (`front`, `back`, `left_chest`, `right_chest`, `sleeve`), and canvas coordinates.
-     - `design_proofs`: Approval versioning (`needs_review`, `sent_to_customer`, `approved`, `revision_requested`) and feedback logging.
-     - `production_jobs`: Tracking floor jobs through DTF/Screen print lines with operator attribution and cost tracking.
-2. **Domain Models & Production Actions (`app/Domain/POD/`)**:
-   - `Artwork.php`, `DesignProof.php`, `ProductionJob.php`: Domain models with relationships to orders and garments.
-   - `CreateProductionJobAction.php`: Initializes production jobs upon customer proof approval.
-3. **Storefront & Admin Controllers (`CustomDesignerController.php`, `ProductionAdminController.php`)**:
-   - `CustomDesignerController.php`:
-     - Garment catalog resolution for custom apparel.
-     - Secure artwork uploading with file size constraints (25MB max) and MIME type validation (`PNG`, `JPEG`, `SVG`).
-   - `ProductionAdminController.php`: Factory production desk with live status transitions.
-4. **Interactive POD Studio & Floor Operations UI (`resources/js/`)**:
-   - `CustomDesigner.tsx`: Interactive designer studio with real-time garment preview, printable safe-zone overlays, placement switcher, artwork file uploader, custom typography layer, and direct add-to-cart action.
-   - `ProductionIndex.tsx`: Operations Kanban desk with one-click job status stepping (`queued` → `in_production` → `printing` → `quality_check` → `ready_for_packaging` → `completed`).
+1. **Suppliers & Dropshipping Database Schemas**:
+   - `database/migrations/2026_10_06_000009_create_suppliers_and_dropshipping_tables.php`:
+     - `suppliers`: Partner credentials, reliability ratings, lead times, and FX config.
+     - `supplier_products`: Mapped external CJ products with USD wholesale prices and freight estimates.
+     - `supplier_variants`: Mapping external `vid` to local `product_variants`.
+     - `supplier_orders`: Automated supplier sourcing and international tracking orders.
+2. **Domain Models & Pricing Actions (`app/Domain/Suppliers/`)**:
+   - `Supplier.php`, `SupplierProduct.php`, `SupplierVariant.php`, `SupplierOrder.php`: Relational Eloquent models.
+   - `CalculateLandedPriceAction.php`: Mathematical landed-cost engine converting USD wholesale + freight into profitable, clean-rounded BDT retail prices.
+   - `ImportCjProductAction.php`: Atomic transaction creating local `Product` and `ProductVariant` records from CJ dropship specifications.
+   - `CjDropshippingProvider.php`: Implementation of `SupplierProviderInterface` with CJ Open API 2.0 integration and zero-crash deterministic sandbox fallback.
+3. **Admin Controllers & Routing (`app/Http/Controllers/Admin/SupplierAdminController.php`, `routes/admin.php`)**:
+   - Sourcing desk index with FX rate tracker.
+   - Live CJ product keyword search endpoint.
+   - One-click import endpoint into local catalog.
+   - Inventory synchronization action.
+4. **React 19 Sourcing Desk UI (`resources/js/pages/admin/SuppliersIndex.tsx`)**:
+   - Supplier connection health cards (CJ Dropshipping, Alibaba).
+   - Live product sourcing search grid with photo, PID, USD pricing, and estimated BDT retail calculations.
+   - Interactive Landed Cost & Margin Calculator modal with live margin slider (20% to 65%) and cost breakdown.
+   - Mapped products directory and in-flight sourcing orders tracking table.
+5. **Integration Documentation**:
+   - `docs/integrations/suppliers.md`: Detailed CJ Dropshipping Open API 2.0 reference and pricing mathematical formulas.
+
+---
+
+## [2026-10-06] Phase 6 Print-On-Demand (POD) & Custom Apparel Engine Completed
+- Migration `2026_10_06_000008_create_pod_and_custom_apparel_tables.php` (`artworks`, `design_proofs`, `production_jobs`).
+- Domain models: `Artwork.php`, `DesignProof.php`, `ProductionJob.php`, `CreateProductionJobAction.php`.
+- Storefront & Admin Controllers: `CustomDesignerController.php`, `ProductionAdminController.php`.
+- React 19 UI: `CustomDesigner.tsx` studio, `ProductionIndex.tsx` production desk.
 
 ---
 
 ## [2026-10-06] Phase 5 BusinessOS Operations Hub Completed
-
-### Features Built:
-1. Multi-Warehouse & Stock Ledger Schemas (`warehouses`, `inventory_items`, `stock_movements`).
-2. Inventory Domain Models & Actions (`Warehouse.php`, `InventoryItem.php`, `AdjustInventoryAction.php`).
-3. Admin Operations Controllers (`DashboardController`, `OrderAdminController`, `InventoryAdminController`).
-4. React 19 Admin UI (`AdminLayout`, `AdminKpiCard`, `Dashboard`, `OrdersIndex`, `InventoryIndex`).
+- Migration `2026_10_06_000007_create_warehouses_and_inventory_tables.php`.
+- Models: `Warehouse.php`, `InventoryItem.php`, `StockMovement.php`, `AdjustInventoryAction.php`.
+- Admin Controllers: `DashboardController.php`, `OrderAdminController.php`, `InventoryAdminController.php`.
+- React 19 UI: `AdminLayout.tsx`, `AdminKpiCard.tsx`, `Dashboard.tsx`, `OrdersIndex.tsx`, `InventoryIndex.tsx`.
 
 ---
 
-## [2026-10-06] Phase 4 Bangladesh Fulfillment & Courier Integration Completed
-
-### Features Built:
-1. Shipments & Events Schemas (`shipments`, `shipment_events`).
-2. Fulfillment Models & Providers (`PathaoCourierProvider`, `SteadfastCourierProvider`, `DispatchOrderAction`).
-3. Courier Webhooks with status normalization (`CourierWebhookController.php`).
+## [2026-10-06] Phase 4 Bangladesh Fulfillment & Couriers Completed
+- Migration `2026_10_06_000006_create_shipments_and_events_tables.php`.
+- Models & Providers: `Shipment.php`, `ShipmentEvent.php`, `FulfillmentManager.php`, `PathaoCourierProvider.php`, `SteadfastCourierProvider.php`.
+- Action & Webhook: `DispatchOrderAction.php`, `CourierWebhookController.php`.
 
 ---
 
 ## [2026-10-06] Phase 3 Online Payment Engine Completed
-
-### Features Built:
-1. Payments & Attempts Schemas (`payments`, `payment_attempts`).
-2. Payment Models & Providers (`PaymentManager`, `CodPaymentProvider`, `SslcommerzPaymentProvider`, `BkashPaymentProvider`).
-3. PaymentController & Webhooks (`PaymentController.php`, IPN endpoints).
-4. Checkout UI integration for COD, SSLCOMMERZ, and bKash.
+- Migration `2026_10_06_000005_create_payments_and_attempts_tables.php`.
+- Providers: `CodPaymentProvider.php`, `SslcommerzPaymentProvider.php`, `BkashPaymentProvider.php`.
 
 ---
 
 ## [2026-10-06] Phase 2 Commerce Core & Bangladesh Checkout Completed
-
-### Features Built:
-1. Orders & Checkout Schemas (`orders`, `order_items`, `order_addresses`, `coupons`).
-2. Order Domain Models & Action (`CreateOrderAction.php` with atomic stock reservation).
-3. Checkout & Order Tracking Controllers (`CheckoutController`, `OrderTrackingController`).
-4. React 19 UI (`BangladeshLocationSelector`, `Checkout`, `Confirmation`, `TrackOrder`).
+- Migration `2026_10_06_000004_create_orders_and_checkout_tables.php`.
+- Action: `CreateOrderAction.php` (pessimistic lock, Dhaka ৳70 vs outside ৳130).
+- React 19 UI: `BangladeshLocationSelector.tsx`, `Checkout.tsx`, `Confirmation.tsx`, `TrackOrder.tsx`.
 
 ---
 
 ## [2026-10-06] Phase 1 Storefront Experience Completed
-
-### Features Built:
-1. Catalog Domain Migrations & Models (`categories`, `collections`, `products`, `product_variants`).
-2. Seeded authentic Bangladesh apparel (Signature Oversized 240 GSM Tee, Custom Canvas POD Tee).
-3. Storefront Controllers (`HomeController`, `ShopController`, `ProductController`).
-4. React 19 Storefront UI (`StorefrontLayout`, `ProductCard`, `Home`, `Shop`, `ProductDetail`).
+- Migration `2026_10_06_000003_create_catalog_tables.php`.
+- Seeder: `database/seeders/CatalogSeeder.php`.
+- React 19 UI: `StorefrontLayout.tsx`, `Home.tsx`, `Shop.tsx`, `ProductDetail.tsx`.
 
 ---
 
-## [2026-10-06] Phase 0 Foundation Initialized
-
-### Actions Completed:
-1. Created repository [auth-abrar/nazeefa](https://github.com/auth-abrar/nazeefa).
-2. Defined modular monolith architecture, `composer.json`, `package.json`, and `.env.example`.
-3. Created Domain Enums and Provider Interfaces (`PaymentProviderInterface`, `CourierProviderInterface`, `SupplierProviderInterface`).
-4. Authored foundational database migrations (`roles`, `permissions`, `audit_logs`, `settings`).
-5. Added design token system and UI primitives (`Button`, `Badge`).
+## [2026-10-06] Phase 0 Foundation Architecture Completed
+- Setup: Laravel 12/13, React 19, Inertia.js 2.0, Tailwind CSS, TypeScript.
+- Providers & Contracts: Payment, Courier, Supplier interfaces.
