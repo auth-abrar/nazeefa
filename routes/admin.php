@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\CrmAdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InventoryAdminController;
+use App\Http\Controllers\Admin\MarketingAdminController;
 use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\ProcurementAdminController;
 use App\Http\Controllers\Admin\ProductionAdminController;
@@ -39,4 +41,13 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
     Route::get('/procurement', [ProcurementAdminController::class, 'index'])->name('admin.procurement.index');
     Route::post('/procurement/purchase-orders', [ProcurementAdminController::class, 'store'])->name('admin.procurement.store');
     Route::post('/procurement/purchase-orders/{id}/status', [ProcurementAdminController::class, 'updateStatus'])->name('admin.procurement.update-status');
+
+    // Marketing & Growth
+    Route::get('/marketing', [MarketingAdminController::class, 'index'])->name('admin.marketing.index');
+    Route::post('/marketing/coupons', [MarketingAdminController::class, 'storeCoupon'])->name('admin.marketing.coupons.store');
+    Route::post('/marketing/abandoned/{id}/recovery', [MarketingAdminController::class, 'sendRecovery'])->name('admin.marketing.abandoned.recovery');
+
+    // Customer CRM
+    Route::get('/customers', [CrmAdminController::class, 'index'])->name('admin.customers.index');
+    Route::post('/customers/{id}/notes', [CrmAdminController::class, 'updateNotes'])->name('admin.customers.notes.update');
 });
