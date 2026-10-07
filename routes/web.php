@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\Storefront\CouponController;
 use App\Http\Controllers\Storefront\CustomDesignerController;
 use App\Http\Controllers\Storefront\HomeController;
@@ -10,10 +11,15 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Web Routes — CommerceOS Storefront
 |--------------------------------------------------------------------------
 */
 
+// Health Check Endpoints
+Route::get('/up', [HealthCheckController::class, 'index'])->name('health.up');
+Route::get('/api/health', [HealthCheckController::class, 'index'])->name('health.api');
+
+// Public Storefront
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/shop', [ShopController::class, 'index'])->name('shop');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
@@ -23,6 +29,6 @@ Route::get('/track-order', [OrderTrackingController::class, 'index'])->name('ord
 Route::get('/custom-designer', [CustomDesignerController::class, 'show'])->name('custom-designer.show');
 Route::post('/custom-designer/artwork', [CustomDesignerController::class, 'uploadArtwork'])->name('custom-designer.artwork');
 
-// Promotions & Checkout Abandonment API
+// Promotions & Checkout Progress API
 Route::post('/api/coupons/apply', [CouponController::class, 'apply'])->name('coupons.apply');
 Route::post('/api/checkout/track-progress', [CouponController::class, 'trackProgress'])->name('checkout.track-progress');
