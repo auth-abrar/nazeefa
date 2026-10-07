@@ -9,29 +9,24 @@ use Inertia\Response;
 
 class OrderTrackingController
 {
-    public function show(Request $request): Response
+    public function index(Request $request)
     {
-        $orderNumber = $request->input('order_number');
-        $phone = $request->input('phone');
         $order = null;
 
-        if ($orderNumber) {
-            $query = Order::with(['items.product', 'address'])
-                ->where('order_number', trim($orderNumber));
-
-            if ($phone) {
-                $query->where('guest_phone', 'like', '%' . substr(trim($phone), -10));
+        if ($trackingNumber = $request->input('tracking_number')) {
+            try {
+                $order = Order::with(['items.variant.product', 'shipments.events'])
+                    ->where('order_number', $trackingNumber)
+                    ->orWhere('tracking_number', $trackingNumber)
+                    ->first();
+            } catch (\Throwable $e) {
+                // Return gracefully if table is not yet populated
             }
-
-            $order = $query->first();
         }
 
         return Inertia::render('storefront/TrackOrder', [
-            'searchedOrder' => $order,
-            'filters' => [
-                'order_number' => $orderNumber,
-                'phone' => $phone,
-            ],
+            'order' => $order,
+            'searchedNumber' => $request->input('tracking_number'),
         ]);
     }
 }

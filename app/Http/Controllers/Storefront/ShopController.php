@@ -10,27 +10,34 @@ use Inertia\Response;
 
 class ShopController
 {
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
-        $query = Product::with(['category', 'variants'])->where('is_active', true);
+        $products = collect();
+        $categories = collect();
 
-        if ($categorySlug = $request->input('category')) {
-            $query->whereHas('category', fn ($q) => $q->where('slug', $categorySlug));
+        try {
+            $query = Product::with(['category', 'variants'])->where('is_active', true);
+
+            if ($categorySlug = $request->input('category')) {
+                $query->whereHas('category', fn ($q) => $q->where('slug', $categorySlug));
+            }
+
+            if ($request->boolean('customizable')) {
+                $query->where('is_customizable', true);
+            }
+
+            if ($search = $request->input('search')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            $products = $query->paginate(12)->withQueryString();
+            $categories = Category::all();
+        } catch (\Throwable $e) {
+            // Cold start table fallback
         }
-
-        if ($request->boolean('customizable')) {
-            $query->where('is_customizable', true);
-        }
-
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $products = $query->paginate(12)->withQueryString();
-        $categories = Category::all();
 
         return Inertia::render('storefront/Shop', [
             'products' => $products,
