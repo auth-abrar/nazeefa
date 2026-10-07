@@ -1,35 +1,52 @@
 # CommerceOS Implementation Log
 
-## [2026-10-07] Phase 9 Growth, Marketing & Customer CRM Engine Completed
+## [2026-10-07] Phase 10 Production Hardening & Hostinger Launch Runbook Completed
 
 ### Repository: [`auth-abrar/nazeefa`](https://github.com/auth-abrar/nazeefa)
 
 ### Features Built:
-1. **Marketing & Customer CRM Relational Schema**:
-   - `database/migrations/2026_10_07_000011_create_marketing_and_crm_tables.php`:
-     - `abandoned_checkouts`: Session tracking, phone index, serialized cart items, poisha subtotals, and recovery tokens.
-     - `customers`: Centralized customer records indexed by normalized Bangladeshi mobile phone numbers, tracking total orders, delivered vs returned trips, cumulative LTV in poisha, and calculated COD return risk scores.
-2. **Domain Models & Marketing Actions (`app/Domain/Marketing/`, `app/Domain/CRM/`)**:
-   - `AbandonedCheckout.php`, `Customer.php`: Domain models with LTV accessors and risk determination helpers.
-   - `ValidateCouponAction.php`: Server-side coupon verification enforcing percentage caps, minimum spends, start/end dates, and global usage limits.
-   - `TrackAbandonedCheckoutAction.php`: Captures in-progress checkouts upon contact input.
-   - `UpdateCustomerProfileOnOrderAction.php`: Real-time LTV accumulation and COD return risk score re-computation on order placement, delivery, and return events.
-3. **Controllers & Routing (`app/Http/Controllers/`, `routes/`)**:
-   - `CouponController.php`: Storefront coupon validation endpoint (`POST /api/coupons/apply`) and progress tracking (`POST /api/checkout/track-progress`).
-   - `MarketingAdminController.php`: Promotions manager and abandoned checkout recovery trigger (`POST /admin/marketing/abandoned/{id}/recovery`).
-   - `CrmAdminController.php`: Customer directory with phone search, LTV ranking, and support notes override.
-4. **React 19 Marketing & CRM Operations UI (`resources/js/pages/admin/`)**:
-   - `MarketingIndex.tsx`: Promotional voucher desk with coupon creation modal, abandoned carts list, and one-click SMS recovery actions.
-   - `CustomersIndex.tsx`: Bangladesh customer directory with phone lookup, LTV display in BDT, COD return risk status badges (`Low Risk`, `Verified VIP`, `High COD Risk Alert`), and customer notes drawer.
-5. **Architectural Documentation**:
-   - `docs/marketing/promotions-and-crm.md`: Full technical guide covering promotional coupons, SMS recovery pipelines, and the COD Return Risk mathematical model.
+1. **Hostinger Server Security & Directory Isolation**:
+   - `.htaccess` (Root): Protects private application folders (`app/`, `database/`, `.env`, `composer.json`, `storage/`) and rewrites public web requests into `public/`.
+   - `public/.htaccess`: Configures Apache `mod_rewrite`, sets production security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`), and browser caching rules for Vite static bundles.
+2. **Automated Zero-Downtime Deployment Script (`deploy.sh`)**:
+   - Automated bash script for Hostinger SSH terminal:
+     - Toggles maintenance mode (`php artisan down`).
+     - Pulls latest git updates from `origin/main`.
+     - Installs production composer packages (`--no-dev --optimize-autoloader`).
+     - Compiles React 19 frontend bundle (`npm run build`).
+     - Runs database migrations with `--force`.
+     - Creates storage symlinks (`php artisan storage:link`).
+     - Warms production caches (`config:cache`, `route:cache`, `view:cache`).
+     - Brings application online and executes health diagnostic check.
+3. **Deep Production Health Diagnostic Engine**:
+   - `app/Http/Controllers/HealthCheckController.php`:
+     - Checks MySQL database connection and driver latency.
+     - Checks file write permissions across `storage/logs`, `storage/framework/cache`, `storage/framework/views`, and `storage/app/public`.
+     - Checks cache engine responsiveness.
+     - Reports live vs sandbox status of SSLCOMMERZ, bKash, Pathao, Steadfast, CJ Dropshipping, and Alibaba.
+     - Endpoints: `GET /up` and `GET /api/health`.
+4. **Production Rate Limiting & Bootstrap Middleware**:
+   - Updated `bootstrap/app.php` with CSRF exemptions for payment IPN callbacks and courier webhooks.
+5. **Hostinger Launch Runbook & Master Documentation**:
+   - `docs/deployment/hostinger-launch-runbook.md`: Detailed step-by-step hPanel configuration guide covering PHP 8.3 extensions, MySQL provisioning, SSH git deployment, document root settings, Hostinger cron jobs, SSL certificates, and go-live verification.
+   - Updated `README.md` with complete 10-phase milestone certification.
+
+---
+
+## [2026-10-07] Phase 9 Growth, Marketing & Customer CRM Engine Completed
+- Migration `2026_10_07_000011_create_marketing_and_crm_tables.php`.
+- Models: `AbandonedCheckout.php`, `Customer.php`.
+- Actions: `ValidateCouponAction.php`, `TrackAbandonedCheckoutAction.php`, `UpdateCustomerProfileOnOrderAction.php`.
+- Controllers: `CouponController.php`, `MarketingAdminController.php`, `CrmAdminController.php`.
+- React 19 UI: `MarketingIndex.tsx`, `CustomersIndex.tsx`.
+- Documentation: `docs/marketing/promotions-and-crm.md`.
 
 ---
 
 ## [2026-10-06] Phase 8 Alibaba Adapter & Hybrid Sourcing Strategy Completed
 - Migration `2026_10_06_000010_create_procurement_and_purchase_orders_tables.php`.
 - Models: `PurchaseOrder.php`, `PurchaseOrderItem.php`, `AlibabaProvider.php`.
-- Actions: `RouteOrderFulfillmentAction.php` (hybrid routing), `CreatePurchaseOrderAction.php`.
+- Actions: `RouteOrderFulfillmentAction.php`, `CreatePurchaseOrderAction.php`.
 - React 19 UI: `ProcurementIndex.tsx` B2B procurement desk.
 - Documentation: `docs/integrations/alibaba-and-hybrid-sourcing.md`.
 
