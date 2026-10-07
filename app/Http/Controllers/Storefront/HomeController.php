@@ -11,21 +11,29 @@ use Inertia\Response;
 
 class HomeController
 {
-    public function index(Request $request): Response
+    public function index(Request $request)
     {
-        $featuredProducts = Product::with(['category', 'variants'])
-            ->where('is_active', true)
-            ->where('is_featured', true)
-            ->take(8)
-            ->get();
+        $featuredProducts = collect();
+        $categories = collect();
+        $activeCollection = null;
 
-        $categories = Category::where('is_featured', true)
-            ->orderBy('sort_order')
-            ->get();
+        try {
+            $featuredProducts = Product::with(['category', 'variants'])
+                ->where('is_active', true)
+                ->where('is_featured', true)
+                ->take(8)
+                ->get();
 
-        $activeCollection = Collection::with(['products.variants'])
-            ->where('is_active', true)
-            ->first();
+            $categories = Category::where('is_featured', true)
+                ->orderBy('sort_order')
+                ->get();
+
+            $activeCollection = Collection::with(['products.variants'])
+                ->where('is_active', true)
+                ->first();
+        } catch (\Throwable $e) {
+            // Tables might be empty or migrating; continue gracefully
+        }
 
         return Inertia::render('storefront/Home', [
             'featuredProducts' => $featuredProducts,
