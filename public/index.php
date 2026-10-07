@@ -2,15 +2,66 @@
 
 define('LARAVEL_START', microtime(true));
 
+// Auto-provision framework storage directories and permissions
+$baseDir = dirname(__DIR__);
+$dirs = [
+    $baseDir . '/storage/framework/cache',
+    $baseDir . '/storage/framework/sessions',
+    $baseDir . '/storage/framework/views',
+    $baseDir . '/storage/logs',
+    $baseDir . '/storage/app/public',
+    $baseDir . '/bootstrap/cache',
+];
+
+foreach ($dirs as $dir) {
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+}
+
+// Auto-provision default .env if missing
+$envPath = $baseDir . '/.env';
+if (!file_exists($envPath)) {
+    $envExample = $baseDir . '/.env.example';
+    if (file_exists($envExample)) {
+        @copy($envExample, $envPath);
+    } else {
+        $defaultEnv = <<<ENV
+APP_NAME="Nazeefa CommerceOS"
+APP_ENV=production
+APP_KEY=base64:XG8d2Lq3N8Z9F0A1b2C3D4e5F6g7H8i9J0K1L2M3N4O=
+APP_DEBUG=false
+APP_TIMEZONE="Asia/Dhaka"
+APP_URL=https://nazeefa.com
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=u863607686_nazeefa
+DB_USERNAME=u863607686_nazeefa_usr
+DB_PASSWORD="Nzf_CommerceOS_2026!#"
+
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
+FILESYSTEM_DISK=local
+
+COMMERCE_DEFAULT_CURRENCY=BDT
+COMMERCE_SUPPORTED_CURRENCIES=BDT,USD
+ENV;
+        @file_put_contents($envPath, $defaultEnv);
+    }
+}
+
 // 1. Check if application is in maintenance mode
-if (file_exists($maintenance = __DIR__ . '/../storage/framework/maintenance.php')) {
+if (file_exists($maintenance = $baseDir . '/storage/framework/maintenance.php')) {
     require $maintenance;
 }
 
 // 2. Full Laravel framework boot if vendor autoloader exists
-if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    require __DIR__ . '/../vendor/autoload.php';
-    (require_once __DIR__ . '/../bootstrap/app.php')
+if (file_exists($baseDir . '/vendor/autoload.php')) {
+    require $baseDir . '/vendor/autoload.php';
+    (require_once $baseDir . '/bootstrap/app.php')
         ->handleRequest(\Illuminate\Http\Request::capture());
     exit;
 }
