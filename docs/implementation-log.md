@@ -1,31 +1,37 @@
 # CommerceOS Implementation Log
 
-## [2026-10-06] Phase 8 Alibaba Adapter & Hybrid Sourcing Strategy Completed
+## [2026-10-07] Phase 9 Growth, Marketing & Customer CRM Engine Completed
 
 ### Repository: [`auth-abrar/nazeefa`](https://github.com/auth-abrar/nazeefa)
 
 ### Features Built:
-1. **Bulk Procurement & Purchase Orders Relational Schema**:
-   - `database/migrations/2026_10_06_000010_create_procurement_and_purchase_orders_tables.php`:
-     - `purchase_orders`: Tracking B2B bulk orders with suppliers, payment milestones (`30_70_milestone`), sea/air freight, 15% customs duties, and port of entry (`Chittagong Sea Port`, `Dhaka Airport Cargo`).
-     - `purchase_order_items`: Line items with MOQ enforcement and received quantity verification.
-     - `orders` table enhanced with `fulfillment_strategy` and `is_split_shipment` tracking.
-2. **Domain Models & Hybrid Routing Engine (`app/Domain/Procurement/`, `app/Domain/Orders/Actions/`)**:
-   - `PurchaseOrder.php`, `PurchaseOrderItem.php`: Domain models with landed cost accessors.
-   - `AlibabaProvider.php`: Implementation of `SupplierProviderInterface` tailored for B2B bulk sourcing, MOQ volume tiers, Trade Assurance, and ocean freight calculations to Chittagong.
-   - `RouteOrderFulfillmentAction.php`: Hybrid Sourcing Decision Engine routing line items between local Dhaka warehouse, on-demand DTF print floor, and CJ dropship packets, with automated split shipment resolution.
-   - `CreatePurchaseOrderAction.php`: Atomic transaction creating PO records and tracking milestones.
-3. **Admin Operations Controllers & Routing (`app/Http/Controllers/Admin/ProcurementAdminController.php`, `routes/admin.php`)**:
-   - B2B procurement dashboard managing PO pipelines.
-   - Purchase order submission and automated status stepping (`submitted` → `deposit_paid` → `in_production` → `in_transit` → `customs_clearance` → `received`).
-   - Automated inventory intake into central warehouse upon status reaching `received`.
-4. **React 19 Procurement Operations UI (`resources/js/pages/admin/ProcurementIndex.tsx`)**:
-   - In-transit inventory valuation cards in both USD and BDT.
-   - Alibaba wholesale catalog browser with MOQ badges, volume tiered pricing, and sample inquiry rates.
-   - Purchase Order Generator modal with freight & customs duty calculations.
-   - Interactive pipeline table with one-click status advancement.
+1. **Marketing & Customer CRM Relational Schema**:
+   - `database/migrations/2026_10_07_000011_create_marketing_and_crm_tables.php`:
+     - `abandoned_checkouts`: Session tracking, phone index, serialized cart items, poisha subtotals, and recovery tokens.
+     - `customers`: Centralized customer records indexed by normalized Bangladeshi mobile phone numbers, tracking total orders, delivered vs returned trips, cumulative LTV in poisha, and calculated COD return risk scores.
+2. **Domain Models & Marketing Actions (`app/Domain/Marketing/`, `app/Domain/CRM/`)**:
+   - `AbandonedCheckout.php`, `Customer.php`: Domain models with LTV accessors and risk determination helpers.
+   - `ValidateCouponAction.php`: Server-side coupon verification enforcing percentage caps, minimum spends, start/end dates, and global usage limits.
+   - `TrackAbandonedCheckoutAction.php`: Captures in-progress checkouts upon contact input.
+   - `UpdateCustomerProfileOnOrderAction.php`: Real-time LTV accumulation and COD return risk score re-computation on order placement, delivery, and return events.
+3. **Controllers & Routing (`app/Http/Controllers/`, `routes/`)**:
+   - `CouponController.php`: Storefront coupon validation endpoint (`POST /api/coupons/apply`) and progress tracking (`POST /api/checkout/track-progress`).
+   - `MarketingAdminController.php`: Promotions manager and abandoned checkout recovery trigger (`POST /admin/marketing/abandoned/{id}/recovery`).
+   - `CrmAdminController.php`: Customer directory with phone search, LTV ranking, and support notes override.
+4. **React 19 Marketing & CRM Operations UI (`resources/js/pages/admin/`)**:
+   - `MarketingIndex.tsx`: Promotional voucher desk with coupon creation modal, abandoned carts list, and one-click SMS recovery actions.
+   - `CustomersIndex.tsx`: Bangladesh customer directory with phone lookup, LTV display in BDT, COD return risk status badges (`Low Risk`, `Verified VIP`, `High COD Risk Alert`), and customer notes drawer.
 5. **Architectural Documentation**:
-   - `docs/integrations/alibaba-and-hybrid-sourcing.md`: Comprehensive reference for multi-stream hybrid sourcing, split-shipment rules, and B2B port logistics.
+   - `docs/marketing/promotions-and-crm.md`: Full technical guide covering promotional coupons, SMS recovery pipelines, and the COD Return Risk mathematical model.
+
+---
+
+## [2026-10-06] Phase 8 Alibaba Adapter & Hybrid Sourcing Strategy Completed
+- Migration `2026_10_06_000010_create_procurement_and_purchase_orders_tables.php`.
+- Models: `PurchaseOrder.php`, `PurchaseOrderItem.php`, `AlibabaProvider.php`.
+- Actions: `RouteOrderFulfillmentAction.php` (hybrid routing), `CreatePurchaseOrderAction.php`.
+- React 19 UI: `ProcurementIndex.tsx` B2B procurement desk.
+- Documentation: `docs/integrations/alibaba-and-hybrid-sourcing.md`.
 
 ---
 
