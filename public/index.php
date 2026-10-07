@@ -2,6 +2,13 @@
 
 define('LARAVEL_START', microtime(true));
 
+// Ensure APP_KEY and critical environment variables are injected into runtime
+$appKey = 'base64:XG8d2Lq3N8Z9F0A1b2C3D4e5F6g7H8i9J0K1L2M3N4O=';
+if (empty($_ENV['APP_KEY'])) {
+    $_ENV['APP_KEY'] = $appKey;
+    putenv("APP_KEY={$appKey}");
+}
+
 // Auto-provision framework storage directories and permissions
 $baseDir = dirname(__DIR__);
 $dirs = [
@@ -19,14 +26,11 @@ foreach ($dirs as $dir) {
     }
 }
 
-// Auto-provision default .env if missing
+// Auto-provision default .env if missing or lacking key
 $envPath = $baseDir . '/.env';
-if (!file_exists($envPath)) {
-    $envExample = $baseDir . '/.env.example';
-    if (file_exists($envExample)) {
-        @copy($envExample, $envPath);
-    } else {
-        $defaultEnv = <<<ENV
+$envContent = file_exists($envPath) ? @file_get_contents($envPath) : '';
+if (!file_exists($envPath) || strpos($envContent, 'APP_KEY=base64') === false) {
+    $defaultEnv = <<<ENV
 APP_NAME="Nazeefa CommerceOS"
 APP_ENV=production
 APP_KEY=base64:XG8d2Lq3N8Z9F0A1b2C3D4e5F6g7H8i9J0K1L2M3N4O=
@@ -49,8 +53,7 @@ FILESYSTEM_DISK=local
 COMMERCE_DEFAULT_CURRENCY=BDT
 COMMERCE_SUPPORTED_CURRENCIES=BDT,USD
 ENV;
-        @file_put_contents($envPath, $defaultEnv);
-    }
+    @file_put_contents($envPath, $defaultEnv);
 }
 
 // 1. Check if application is in maintenance mode
@@ -66,8 +69,7 @@ if (file_exists($baseDir . '/vendor/autoload.php')) {
     exit;
 }
 
-// 3. Graceful High-Aesthetic Production Landing & Diagnostic Page
-// When running on Hostinger Web Hosting prior to vendor bundle composition
+// 3. Graceful Production Landing & Diagnostic Page
 $dbStatus = 'checking';
 $dbMessage = '';
 try {
